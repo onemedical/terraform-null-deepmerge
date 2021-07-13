@@ -1,15 +1,15 @@
 locals {
     // Find the greatest depth through the maps
-    greatest_depth = max(concat([
+    greatest_depth = max(concat([flatten([
         for mod in local.modules:
-            concat([
+            concat([flatten([
                 for i in range(0, length(var.maps)):
                     [
                         for f in mod[i].fields:
                         length(f["path"])
                     ]
-            ]...)
-    ]...)...)
+            ])]...)
+    ])]...)...)
 
     // For each input map, convert it to a single-level map with a unique key for every nested value
     fields_json = [
@@ -24,7 +24,7 @@ locals {
     ]
 
     // Merge the maps using the standard merge function, which will cause higher-precedence map values to overwrite lower-precedence values
-    merged_map = merge(local.fields_json...)
+    merged_map = merge(flatten([local.fields_json])...)
 
     // Split the merged fields into segments for each depth
     merged_fields_by_depth = {
@@ -44,13 +44,13 @@ locals {
             
 // Check to make sure the highest level module has no remaining values that weren't recursed through
 module "asset_sufficient_levels" {
-    source  = "Invicton-Labs/assertion/null"
-    version = "0.1.1"
+    source  = "git::ssh://git@github.com/onemedical/terraform-null-assertion"
+
     error_message = "Deepmerge has recursed to insufficient depth (${length(local.modules)} levels is not enough)"
-    condition = concat([
+    condition = concat([flatten([
         for i in range(0, length(var.maps)):
         local.modules[length(local.modules) - 1][i].remaining
-    ]...) == []
+    ])]...) == []
 }
 
 // Use this  from a DIFFERENT terraform project to generate a new file with a different max depth
