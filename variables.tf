@@ -1,7 +1,3 @@
-terraform {
-    experiments = [variable_validation]
-}
-
 variable "maps" {
     description = "A list of maps to merge. Maps should be ordered in increasing precedence, i.e. values in a map later in the list will overwrite values in a map earlier in the list."
     type = any
